@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy, jwtConstants } from './strategies/jwt.strategy';
-import { InMemoryStore } from './stores/in-memory.store';
+import { User } from './entities/user.entity';
+import { Session } from './entities/session.entity';
 
 @Module({
     imports: [
@@ -13,9 +15,10 @@ import { InMemoryStore } from './stores/in-memory.store';
             secret: jwtConstants.secret,
             signOptions: { expiresIn: jwtConstants.expiresIn as any },
         }),
+        TypeOrmModule.forFeature([User, Session]),
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, InMemoryStore],
+    providers: [AuthService, JwtStrategy],
     exports: [AuthService],
 })
 export class AuthModule { }

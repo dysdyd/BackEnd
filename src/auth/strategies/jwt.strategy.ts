@@ -1,7 +1,9 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InMemoryStore } from '../stores/in-memory.store';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user.entity';
 
 // TODO: Move to env vars
 export const jwtConstants = {
@@ -11,7 +13,10 @@ export const jwtConstants = {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(private usersStore: InMemoryStore) {
+    constructor(
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
+    ) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
@@ -22,7 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     async validate(payload: any) {
         // This method is called after the token is verified
         // We can add additional checks here if needed, or simply return the user
-        const user = this.usersStore.findUserById(payload.sub);
+        const user = await this.userRepository.findOne({ where: { id: payload.sub } });
         if (!user) {
             throw new UnauthorizedException();
         }
